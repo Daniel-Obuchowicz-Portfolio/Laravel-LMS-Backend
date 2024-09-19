@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class Book extends Model
 {
     use HasFactory;
+    protected $fillable = ['name', 'author', 'year_published', 'publisher', 'is_borrowed', 'client_id'];
 
-    protected $fillable = ['title', 'author', 'published_year', 'publisher', 'is_borrowed', 'borrowed_by'];
-
-    public function borrowedBy()
+    protected $casts = [
+        'is_borrowed' => 'boolean',  // Rzutowanie na boolean
+    ];
+    
+    public function client()
     {
-        return $this->belongsTo(Client::class, 'borrowed_by');
+        return $this->belongsTo(Client::class);
     }
 }

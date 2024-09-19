@@ -2,73 +2,101 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Book;
 use Illuminate\Http\Request;
+use App\Models\Book;
+use App\Http\Controllers\Controller;
 
 class BookController extends Controller
 {
-    /**
-     * List all books with pagination and optional search functionality.
-     */
+    // Listowanie książek z wyszukiwarką i paginacją
     public function index(Request $request)
     {
         $query = Book::query();
 
-        if ($search = $request->input('search')) {
-            $query->where('title', 'like', "%{$search}%")
-                ->orWhere('author', 'like', "%{$search}%")
-                ->orWhereHas('borrowedBy', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%");
-                });
+        // Wyszukiwanie książek na podstawie nazwy, autora lub klienta
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $searchTerms = explode(' ', $search);
+
+            $query->where('name', 'like', "%$search%")
+                  ->orWhere('author', 'like', "%$search%")
+                  ->orWhereHas('client', function ($q) use ($searchTerms) {
+                      if (count($searchTerms) > 1) {
+                          $q->where('first_name', 'like', "%$searchTerms[0]%")
+                            ->where('last_name', 'like', "%$searchTerms[1]%");
+                      } else {
+                          $q->where('first_name', 'like', "%$searchTerms[0]%")
+                            ->orWhere('last_name', 'like', "%$searchTerms[0]%");
+                      }
+                  });
         }
 
-        return $query->paginate(20);
-    }
+        // Pobierz książki i formatowanie danych
+        $books = $query->with('client')->paginate(20);
 
-    /**
-     * Show details of a single book.
-     */
-    public function show(Book $book)
-    {
-        return $book->load('borrowedBy');
-    }
-
-    /**
-     * Borrow a book.
-     */
-    public function borrow(Request $request, Book $book)
-    {
-        if ($book->is_borrowed) {
-            return response()->json(['message' => 'Book is already borrowed'], 400);
+        // Sprawdzenie, czy są wyniki
+        if ($books->isEmpty()) {
+            return response()->json([
+                'message' => 'No books found for the given criteria.'
+            ], 404); // Kod 404, jeśli nie ma książek
         }
 
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-        ]);
+        $books->getCollection()->transform(function ($book) {
+            // Domyślne dane książki
+            $data = [
+                'name' => $book->name,
+                'is_borrowed' => $book->is_borrowed, // true/false dla statusu wypożyczenia
+            ];
 
-        $book->update([
-            'is_borrowed' => true,
-            'borrowed_by' => $validated['client_id'],
-        ]);
+            // Dodaj dane klienta, tylko jeśli książka jest wypożyczona
+            if ($book->is_borrowed && $book->client) {
+                $data['borrowed_by'] = [
+                    'first_name' => $book->client->first_name,
+                    'last_name' => $book->client->last_name,
+                ];
+            }
 
-        return response()->json($book);
+            return $data;
+        });
+
+        return response()->json([
+            'message' => 'Books retrieved successfully.',
+            'data' => $books
+        ], 200); // Kod 200, jeśli książki zostały znalezione
     }
 
-    /**
-     * Return a borrowed book.
-     */
-    public function return(Book $book)
+    // Szczegóły książki
+    public function show($id)
     {
-        if (!$book->is_borrowed) {
-            return response()->json(['message' => 'Book is not borrowed'], 400);
+        $book = Book::with('client')->find($id);
+
+        // Sprawdzenie, czy książka istnieje
+        if (!$book) {
+            return response()->json([
+                'message' => 'Book not found.'
+            ], 404); // Kod 404, jeśli książka nie istnieje
         }
 
-        $book->update([
-            'is_borrowed' => false,
-            'borrowed_by' => null,
-        ]);
+        // Zwraca szczegóły książki z informacją, czy jest wypożyczona
+        $response = [
+            'name' => $book->name,
+            'author' => $book->author,
+            'year_published' => $book->year_published,
+            'publisher' => $book->publisher,
+            'is_borrowed' => $book->is_borrowed,  // true/false dla statusu wypożyczenia
+        ];
 
-        return response()->json($book);
+        // Dodaj dane klienta, tylko jeśli książka jest wypożyczona
+        if ($book->is_borrowed && $book->client) {
+            $response['borrowed_by'] = [
+                'first_name' => $book->client->first_name,
+                'last_name' => $book->client->last_name,
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Book details retrieved successfully.',
+            'data' => $response
+        ], 200); // Kod 200, jeśli szczegóły książki zostały zwrócone
     }
 }

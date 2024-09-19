@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clients', function (Blueprint $table) {
+        Schema::create('books', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
+            $table->string('name');
+            $table->string('author');
+            $table->year('year_published');
+            $table->string('publisher');
+            $table->boolean('is_borrowed')->default(false);
+            $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clients');
+        Schema::dropIfExists('books');
     }
 };

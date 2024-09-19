@@ -1,3 +1,56 @@
+# Endpointy
+
+| Metoda   | Endpoint                              | Parametry                               | Opis                                                                 |
+|----------|---------------------------------------|-----------------------------------------|----------------------------------------------------------------------|
+| `GET`    | `/api/books`                          | `?page=` (paginacja), `?search=` (nazwa)| Pobranie listy książek z paginacją i wyszukiwaniem po nazwie.         |
+| `GET`    | `/api/book/single/{id}`               |                                         | Pobranie szczegółów jednej książki na podstawie ID.                  |
+| `GET`    | `/api/clients`                        |                                         | Pobranie listy klientów.                                             |
+| `GET`    | `/api/client/single/{id}`             |                                         | Pobranie szczegółów klienta wraz z listą wypożyczonych książek.      |
+| `POST`   | `/api/add/clients`                    |                                         | Dodanie nowego klienta na podstawie danych przekazanych w żądaniu.   |
+| `DELETE` | `/api/remove/client/{id}`             |                                         | Usunięcie klienta o podanym ID.                                      |
+| `POST`   | `/api/clients/{clientId}/borrow/{bookId}` |                                      | Wypożyczenie książki przez klienta.                                  |
+| `POST`   | `/api/books/{bookId}/return`          |                                         | Zwrócenie książki przez klienta.                                     |
+
+---
+
+### Szczegóły endpointów:
+
+#### Pobranie listy książek
+- **Endpoint**: `/api/books`
+- **Parametry**:
+  - `?page=` – numer strony dla paginacji (np. `/api/books?page=2`).
+  - `?search=` – wyszukuje książki na podstawie nazwy (np. `/api/books?search=Harry`).
+- Zwraca listę wszystkich książek z możliwością paginacji oraz filtrowania po nazwie.
+
+#### Pobranie szczegółów książki
+- **Endpoint**: `/api/book/single/{id}`
+- Zwraca szczegóły jednej książki na podstawie jej ID.
+
+#### Pobranie listy klientów
+- **Endpoint**: `/api/clients`
+- Zwraca listę wszystkich klientów w systemie.
+
+#### Pobranie szczegółów klienta
+- **Endpoint**: `/api/client/single/{id}`
+- Zwraca szczegóły klienta na podstawie jego ID oraz listę wypożyczonych książek.
+
+#### Dodanie nowego klienta
+- **Endpoint**: `/api/add/clients`
+- Dodaje nowego klienta na podstawie imienia i nazwiska.
+
+#### Usunięcie klienta
+- **Endpoint**: `/api/remove/client/{id}`
+- Usuwa klienta o podanym ID.
+
+#### Wypożyczenie książki
+- **Endpoint**: `/api/clients/{clientId}/borrow/{bookId}`
+- Klient wypożycza książkę.
+
+#### Zwrócenie książki
+- **Endpoint**: `/api/books/{bookId}/return`
+- Klient zwraca wypożyczoną książkę.
+
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
